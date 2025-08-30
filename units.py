@@ -56,11 +56,9 @@ fluid_ounce_us = gallon_us / 128
 cup_us = 8 * fluid_ounce_us
 pint_us = 2 * cup_us
 quart_us = 2 * pint_us
-gallon_imp = 4 * (20 * 28.4130625 * milliliter)  # defined later more clearly
 fluid_ounce_imp = 28.4130625 * milliliter
 pint_imp = 20 * fluid_ounce_imp
 quart_imp = 2 * pint_imp
-# For clarity define imperial gallon properly
 gallon_imp = 4 * pint_imp
 # teaspoons/tablespoons (variants)
 teaspoon_us = 4.92892159375 * milliliter
@@ -73,11 +71,11 @@ barrel_beer_us = 31 * gallon_us
 barrel_beer_uk = 36 * gallon_imp
 # common aliases and shorthand
 meter = metre
-liter = litre
+litre = liter
 mL = milliliter
 L = liter
 # Byte units - SI decimal and IEC binary prefixes
-byte = byte
+byte = [information]
 kB = 1000 * byte
 MB = 1000**2 * byte
 GB = 1000**3 * byte
