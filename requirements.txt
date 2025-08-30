@@ -1,0 +1,6 @@
+---
+
+# 📄 requirements.txt
+```text
+streamlit
+pint
