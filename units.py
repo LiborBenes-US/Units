@@ -224,16 +224,12 @@ def parse_decimal_input(text):
 def quantity_from_decimal(value_decimal, unit_str):
     """
     Create a pint Quantity from a Decimal and unit string.
-    Handles temperature units specially to avoid offset issues.
+    Converts Decimal to float for pint compatibility, handling temperature units specially.
     """
     try:
-        # For temperature units, convert to float due to offset operations
-        temperature_units = ['degC', 'degF', 'kelvin']
-        if unit_str in temperature_units:
-            q = Q_(float(value_decimal), unit_str)
-        else:
-            # Use string conversion to preserve precision for non-temperature units
-            q = Q_(str(value_decimal), unit_str)
+        # Convert Decimal to float for all units
+        value_float = float(value_decimal)
+        q = Q_(value_float, unit_str)
         return q
     except Exception as e:
         st.error(f"Quantity creation error: {e}")
