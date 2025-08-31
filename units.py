@@ -94,7 +94,8 @@ kilowatt_hour = 3600000 * joule
 # Fuel Economy (derived from NIST length/volume)
 mile_per_gallon_us = statute_mile / gallon_us = mpg_us
 mile_per_gallon_imp = statute_mile / gallon_imp = mpg_imp
-liter_per_100_kilometer = (100 * liter) / kilometer = L/100km
+# Use the conversion factor: 1 L/100km = 235.2145833 / mpg
+liter_per_100_kilometer = 235.2145833 / mile_per_gallon_us = L/100km
 
 # Digital Storage (IEC/SI standards)
 byte = [information]
