@@ -6,6 +6,7 @@ import streamlit as st
 from decimal import Decimal, getcontext, InvalidOperation
 from pint import UnitRegistry
 from pint.errors import UndefinedUnitError
+from mpmath import mp
 import io, json, csv, hashlib, base64, binascii, urllib.parse, html
 import pandas as pd
 
@@ -18,7 +19,7 @@ GITHUB_OWNER = "LiborBenes-US"
 GITHUB_REPO = "Units"
 ISSUE_TITLE = urllib.parse.quote("Unit suggestion:")
 ISSUE_BODY = urllib.parse.quote(
-    "Please describe the unit you'd like added (name, exact definizione/ratio to SI unit, and source/reference).\n\nExample:\n- name: 'tablespoon_au'\n- definition: 20 mL\n- note: 'Australian tablespoon'"
+    "Please describe the unit you'd like added (name, exact definition/ratio to SI unit, and source/reference).\n\nExample:\n- name: 'tablespoon_au'\n- definition: 20 mL\n- note: 'Australian tablespoon'"
 )
 GITHUB_ISSUE_URL = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/issues/new?title={ISSUE_TITLE}&body={ISSUE_BODY}"
 
@@ -78,6 +79,7 @@ mile_per_hour = 0.44704 * meter/second
 
 # Pressure (NIST SP 811)
 bar = 100000 * pascal
+millibar = 100 * pascal = mbar
 atmosphere = 101325 * pascal
 mmHg = 133.322387415 * pascal
 psi = 6894.757293168 * pascal
@@ -90,8 +92,9 @@ watt_hour = 3600 * joule
 kilowatt_hour = 3600000 * joule
 
 # Fuel Economy (derived from NIST length/volume)
-mile_per_gallon_us = statute_mile / gallon_us
-mile_per_gallon_imp = statute_mile / gallon_imp
+mile_per_gallon_us = statute_mile / gallon_us = mpg_us
+mile_per_gallon_imp = statute_mile / gallon_imp = mpg_imp
+liter_per_100_kilometer = liter / (100 * kilometer) = L/100km
 
 # Digital Storage (IEC/SI standards)
 byte = [information]
@@ -138,7 +141,7 @@ debug_tests = [
     (88.6, "kilometer/hour", "mile_per_hour"),
     (1013.25, "millibar", "pascal"),
     (5000, "joule", "calorie"),
-    (8.5, "liter/100 kilometer", "mile_per_gallon_us"),
+    (8.5, "liter_per_100_kilometer", "mile_per_gallon_us"),
     (1024, "MiB", "MB"),
     (180, "degree", "radian"),
     (1.23456789e-10, "meter", "nanometer"),
@@ -172,15 +175,24 @@ CATEGORIES = {
     ],
     "Temperature": ["degC", "degF", "kelvin"],
     "Speed": ["meter/second", "kilometer/hour", "mile_per_hour", "knot"],
-    "Pressure": ["pascal", "kilopascal", "bar", "atmosphere", "mmHg", "psi"],
+    "Pressure": ["pascal", "kilopascal", "bar", "millibar", "atmosphere", "mmHg", "psi"],
     "Energy & Power": ["joule", "kilojoule", "watt_hour", "kilowatt_hour", "calorie", "kcal", "BTU", "watt"],
-    "Fuel economy": ["liter/100 kilometer", "mile_per_gallon_us", "mile_per_gallon_imp"],
+    "Fuel economy": ["liter_per_100_kilometer", "mile_per_gallon_us", "mile_per_gallon_imp"],
     "Digital storage": ["bit", "byte", "kB", "MB", "GB", "TB", "PB", "KiB", "MiB", "GiB", "TiB", "PiB"],
     "Angle": ["degree", "radian", "grad"]
 }
 
 def pretty_unit_label(u):
-    lab = u.replace("**2", "²").replace("**3", "³").replace("_", " ").replace("*", "·")
+    lab = (u.replace("**2", "²")
+           .replace("**3", "³")
+           .replace("_", " ")
+           .replace("*", "·")
+           .replace("liter_per_100_kilometer", "liter/100 km")
+           .replace("mile_per_gallon_us", "mile/gallon (US)")
+           .replace("mile_per_gallon_imp", "mile/gallon (Imp)")
+           .replace("barrel_oil_us", "barrel (US oil)")
+           .replace("barrel_beer_us", "barrel (US beer)")
+           .replace("barrel_beer_uk", "barrel (UK beer)"))
     return lab
 
 # ----------------------------
@@ -222,12 +234,12 @@ def parse_decimal_input(text):
 # Helper: convert Decimal-valued quantity to pint Quantity
 def quantity_from_decimal(value_decimal, unit_str):
     """
-    Create a pint Quantity from a Decimal and unit string.
-    Converts Decimal to float for pint compatibility.
+    Create a pint Quantity from a Decimal and unit string with high precision.
     """
     try:
-        value_float = float(value_decimal)
-        q = Q_(value_float, unit_str)
+        mp.dps = 50
+        value_float = mp.mpf(str(value_decimal))
+        q = Q_(float(value_float), unit_str)
         return q
     except Exception as e:
         st.error(f"Quantity creation error: {e}")
