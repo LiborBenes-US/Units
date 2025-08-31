@@ -1,35 +1,17 @@
-# Units
+# Units — Universal Converter
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://units-liborbenes-us.streamlit.app/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
-[![GitHub issues](https://img.shields.io/github/issues/LiborBenes-US/Units.svg)](https://github.com/LiborBenes-US/Units/issues)
+A comprehensive, ad-free unit conversion tool built with Streamlit and `pint`, supporting a wide range of units across multiple categories. Deployed at [units1.streamlit.app](https://units1.streamlit.app).
 
-## 📖 Description
-**Units** is a comprehensive unit conversion tool built with [Streamlit](https://streamlit.io/).  
-It supports:
-- U.S. customary units (including legacy/deprecated ones used in older documents)
-- Metric & SI units
-- Temperature conversions (Celsius, Fahrenheit, Kelvin)
-- Length, distance, area, volume, weight, and more
-- Number systems (binary, octal, decimal, hexadecimal)
-- Encoders/decoders (Base64, URL, HTML, etc.)
-- Hashing (MD5, SHA-1, SHA-256, SHA-512)
+## Features
+- **Categories**: Length, Area, Volume, Mass, Temperature, Speed, Pressure, Energy & Power, Fuel Economy, Digital Storage, Angle.
+- **Precision**: Supports high-precision Decimal input; output precision is adjustable via a slider (3–60 decimal places).
+- **Unit Definitions**: Aligned with NIST standards (Handbook 44, SP 811) for maximum accuracy. Note that results may differ slightly from some online calculators due to rounding or differing standards (e.g., `1 gallon_us = 3.785411784 liter` per NIST vs. ~3.785 liter in some tools).
+- **Additional Tools**: Number base conversions (bin/oct/dec/hex), ASCII/Unicode code points, encodings (Base64, URL), and cryptographic hashes (MD5, SHA-1, SHA-256, SHA-512).
+- **Session History**: Stored in-memory for the current browser tab; downloadable as JSON or CSV.
+- **Unit Suggestions**: Submit new unit requests via GitHub Issues (no data is sent from the app).
 
-## 🚀 Features
-- **High precision inputs**: You can enter as many decimal places as needed. This allows for exact values in scientific or mathematical work (e.g., precise Pi usage).
-- **Session history**: All conversions in the current session are stored. You can review them while the app is open.
-- **Download history**: Export your session’s conversions as a CSV before closing the page.  
-  *(No information is stored after you close the browser tab — your data is never saved on the server.)*
-- **Safety**: All inputs are sanitized to prevent malicious use. No data is transmitted outside the app, except when you choose to visit GitHub for feedback.
-
-## 📷 Screenshot
-(*To be added after deployment*)
-
-## 🛠️ Installation & Local Use
-Clone the repository and install dependencies:
-
-```bash
-git clone https://github.com/LiborBenes-US/Units.git
-cd Units
-pip install -r requirements.txt
-streamlit run units.py
+## Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/LiborBenes-US/Units.git
+   cd Units
