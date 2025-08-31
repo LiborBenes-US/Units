@@ -81,6 +81,9 @@ MiB = 1024**2 * byte
 GiB = 1024**3 * byte
 TiB = 1024**4 * byte
 PiB = 1024**5 * byte
+# Fuel economy
+mile_per_gallon_us = mile / gallon_us
+mile_per_gallon_imp = mile / gallon_imp
 """
 
 # Load definitions into pint
@@ -167,17 +170,37 @@ def parse_decimal_input(text):
 # Helper: convert Decimal-valued quantity to pint Quantity
 def quantity_from_decimal(value_decimal, unit_str):
     """
-    Attempts to create a pint Quantity from a Decimal and unit string.
-    Converts Decimal to float to avoid type mismatch in pint operations.
+    Create a pint Quantity from a Decimal and unit string.
+    Preserves Decimal precision where possible.
     """
     try:
-        # Convert Decimal to float before creating quantity
-        q = Q_(float(value_decimal), unit_str)
+        # For temperature units, we need special handling
+        if unit_str in ["degC", "degF", "kelvin"]:
+            # Create temperature with Decimal magnitude
+            q = Q_(float(value_decimal), unit_str)
+        else:
+            # For other units, try to preserve Decimal precision
+            # Convert to string first to avoid floating point issues
+            q = Q_(str(value_decimal), unit_str)
         return q
     except Exception as e:
         st.error(f"Quantity creation error: {e}")
         return None
-        
+
+# Helper: format result with proper precision
+def format_result(value, precision):
+    """Format a numeric value with the specified precision"""
+    try:
+        if isinstance(value, Decimal):
+            return format(value.quantize(Decimal(1) / (Decimal(10) ** precision)), 'f')
+        else:
+            # Convert to Decimal for formatting
+            dec_val = Decimal(str(value))
+            return format(dec_val.quantize(Decimal(1) / (Decimal(10) ** precision)), 'f')
+    except:
+        # Fallback for very large/small numbers
+        return f"{value:.{precision}g}"
+
 # ----------------------------
 # TOOL: Unit Converter
 # ----------------------------
@@ -218,15 +241,9 @@ if tool == "Unit Converter":
                 q_from = quantity_from_decimal(dec_val, from_unit)
                 # attempt conversion
                 q_to = q_from.to(to_unit)
-                # format result: try to present using Decimal where possible
-                # q_to.magnitude may be Decimal or float
-                mag = q_to.magnitude
-                # If it's a Decimal, format directly; if float, convert to Decimal for formatting
-                if isinstance(mag, Decimal):
-                    formatted = format(mag.quantize(Decimal(1) / (Decimal(10) ** prec)), 'f')
-                else:
-                    # convert to Decimal for rounding/formatting (may add floating rounding)
-                    formatted = str(Decimal(mag).quantize(Decimal(1) / (Decimal(10) ** prec)))
+                
+                # Format the result
+                formatted = format_result(q_to.magnitude, prec)
                 out_str = f"{dec_val} {from_unit} = {formatted} {to_unit}"
                 st.success(out_str)
                 add_history({
