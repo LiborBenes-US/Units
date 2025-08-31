@@ -40,10 +40,10 @@ Q_ = ureg.Quantity
 EXTRA_DEFS = """
 # Survey / historical / labelled units
 nautical_mile = 1852 * meter = nmi
-statute_mile = 1609.344 * meter = mile
+statute_mile = 1609.344 * meter
 mile_us_survey = 1609.3472199999999 * meter
 foot_us_survey = 1200/3937 * meter
-acre_intl = 4046.8564224 * meter**2 = acre
+acre_intl = 4046.8564224 * meter**2
 acre_us_survey = 4046.8726099886 * meter**2
 # Tons
 ton_short = 2000 * pound = short_ton
@@ -168,16 +168,16 @@ def parse_decimal_input(text):
 def quantity_from_decimal(value_decimal, unit_str):
     """
     Attempts to create a pint Quantity from a Decimal and unit string.
-    Pint may perform internal float conversions; we try to keep precision where possible.
+    Converts Decimal to float to avoid type mismatch in pint operations.
     """
     try:
-        # Some pint registries accept Decimal; create quantity directly
-        q = Q_(value_decimal, unit_str)
+        # Convert Decimal to float before creating quantity
+        q = Q_(float(value_decimal), unit_str)
         return q
-    except Exception:
-        # fallback: convert to float (loss of precision possible)
-        return Q_(float(value_decimal), unit_str)
-
+    except Exception as e:
+        st.error(f"Quantity creation error: {e}")
+        return None
+        
 # ----------------------------
 # TOOL: Unit Converter
 # ----------------------------
