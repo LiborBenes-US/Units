@@ -90,7 +90,10 @@ PiB = 1024**5 * byte
 
 # Load definitions into pint
 import io as _io
-ureg.load_definitions(_io.StringIO(EXTRA_DEFS))
+for line in EXTRA_DEFS.splitlines():
+    line = line.strip()
+    if line and not line.startswith('#'):  # Skip empty lines and comments
+        ureg.define(line)
 
 # ----------------------------
 # UNIT CATEGORIES and LISTS
