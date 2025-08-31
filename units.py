@@ -12,19 +12,16 @@ import pandas as pd
 # ----------------------------
 # CONFIG
 # ----------------------------
-# Decimal precision for parsing user input (high precision accepted)
-getcontext().prec = 200  # user-visible decimal precision for input parsing & formatting
+getcontext().prec = 200
 
-# GitHub Issue redirect
 GITHUB_OWNER = "LiborBenes-US"
 GITHUB_REPO = "Units"
 ISSUE_TITLE = urllib.parse.quote("Unit suggestion:")
 ISSUE_BODY = urllib.parse.quote(
-    "Please describe the unit you'd like added (name, exact definition/ratio to SI unit, and source/reference).\n\nExample:\n- name: 'tablespoon_au'\n- definition: 20 mL\n- note: 'Australian tablespoon'"
+    "Please describe the unit you'd like added (name, exact definizione/ratio to SI unit, and source/reference).\n\nExample:\n- name: 'tablespoon_au'\n- definition: 20 mL\n- note: 'Australian tablespoon'"
 )
 GITHUB_ISSUE_URL = f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/issues/new?title={ISSUE_TITLE}&body={ISSUE_BODY}"
 
-# App meta
 st.set_page_config(page_title="Units — Universal Converter", layout="wide", page_icon="⚖️")
 st.title("Units — Universal Converter ⚖️")
 st.markdown("**Converter: U.S. & Metric Units** — ad-free, comprehensive, and safe. Session history can be downloaded (only stored for current tab/session).")
@@ -35,7 +32,6 @@ st.markdown("**Converter: U.S. & Metric Units** — ad-free, comprehensive, and 
 ureg = UnitRegistry()
 Q_ = ureg.Quantity
 
-# NIST-aligned unit definitions
 EXTRA_DEFS = """
 # Length (NIST SP 811, Handbook 44)
 nautical_mile = 1852 * meter = nmi
@@ -115,35 +111,39 @@ degree = 0.0174532925199433 * radian
 grad = 0.015707963267949 * radian
 """
 
-# Load definitions into pint
 for line in EXTRA_DEFS.splitlines():
     line = line.strip()
-    if line and not line.startswith('#'):  # Skip empty lines and comments
+    if line and not line.startswith('#'):
         ureg.define(line)
 
-# Debug conversions to verify NIST alignment
+# Debug conversions
 def debug_conversion(value, from_unit, to_unit):
     try:
-        q_from = Q_(float(value), from_unit)
+        q_from = quantity_from_decimal(Decimal(str(value)), from_unit)
+        if q_from is None:
+            print(f"Failed to create quantity for {value} {from_unit}")
+            return
         q_to = q_from.to(to_unit)
         print(f"{value} {from_unit} = {q_to.magnitude} {to_unit}")
     except Exception as e:
         print(f"Error converting {value} {from_unit} to {to_unit}: {e}")
 
-# Run debug tests for all categories
 debug_tests = [
-    (2.718, "acre_intl", "hectare"),  # ~1.09969564224
-    (3.14159, "gallon_us", "liter"),  # ~11.8933517538
-    (1, "barrel_oil_us", "gallon_imp"),  # ~34.9723157541
-    (123.456, "pound", "kilogram"),  # ~55.9957834963
-    (0.9876, "ton_short", "tonne"),  # ~0.8960396754
-    (37.5, "degC", "degF"),  # 99.5
-    (88.6, "kilometer/hour", "mile_per_hour"),  # ~55.05312353
-    (1013.25, "millibar", "pascal"),  # 101325
-    (5000, "joule", "calorie"),  # ~1195.02868069
-    (8.5, "liter/100 kilometer", "mile_per_gallon_us"),  # ~27.6736941176
-    (1024, "MiB", "MB"),  # ~1073.741824
-    (180, "degree", "radian"),  # ~3.14159265359
+    (2.718, "acre_intl", "hectare"),
+    (3.14159, "gallon_us", "liter"),
+    (1, "barrel_oil_us", "gallon_imp"),
+    (123.456, "pound", "kilogram"),
+    (0.9876, "ton_short", "tonne"),
+    (37.5, "degC", "degF"),
+    (88.6, "kilometer/hour", "mile_per_hour"),
+    (1013.25, "millibar", "pascal"),
+    (5000, "joule", "calorie"),
+    (8.5, "liter/100 kilometer", "mile_per_gallon_us"),
+    (1024, "MiB", "MB"),
+    (180, "degree", "radian"),
+    (1.23456789e-10, "meter", "nanometer"),
+    (1234567890123, "byte", "TB"),
+    (-40, "degF", "degC"),
 ]
 for value, from_unit, to_unit in debug_tests:
     debug_conversion(value, from_unit, to_unit)
@@ -179,7 +179,6 @@ CATEGORIES = {
     "Angle": ["degree", "radian", "grad"]
 }
 
-# Utility: flatten units list for search dropdowns, with friendly labels
 def pretty_unit_label(u):
     lab = u.replace("**2", "²").replace("**3", "³").replace("_", " ").replace("*", "·")
     return lab
@@ -188,7 +187,7 @@ def pretty_unit_label(u):
 # SESSION STATE: history
 # ----------------------------
 if "history" not in st.session_state:
-    st.session_state.history = []  # list of dicts
+    st.session_state.history = []
 
 def add_history(obj):
     st.session_state.history.insert(0, obj)
@@ -224,10 +223,9 @@ def parse_decimal_input(text):
 def quantity_from_decimal(value_decimal, unit_str):
     """
     Create a pint Quantity from a Decimal and unit string.
-    Converts Decimal to float for pint compatibility, handling temperature units specially.
+    Converts Decimal to float for pint compatibility.
     """
     try:
-        # Convert Decimal to float for all units
         value_float = float(value_decimal)
         q = Q_(value_float, unit_str)
         return q
@@ -248,10 +246,10 @@ def format_result(value, precision):
         else:
             dec_val = Decimal(str(value))
         quantized = dec_val.quantize(Decimal('0.' + '0' * precision))
-        return format(quantized, 'f')
+        return format(quantized, 'f').rstrip('0').rstrip('.')
     except:
         try:
-            return f"{value:.{precision}f}"
+            return f"{float(value):.{precision}f}".rstrip('0').rstrip('.')
         except:
             return str(value)
 
@@ -263,7 +261,7 @@ if tool == "Unit Converter":
     st.markdown(
         "Pick a category, choose units, and enter a numeric value. "
         "Conversions are aligned with NIST standards for high precision. "
-        "Decimal input is supported; output precision is user-adjustable."
+        "Decimal input is supported; output precision is adjustable."
     )
 
     cat = st.selectbox("Category", list(CATEGORIES.keys()))
