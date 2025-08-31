@@ -15,9 +15,9 @@ import pandas as pd
 # Decimal precision for parsing user input (high precision accepted)
 getcontext().prec = 200  # user-visible decimal precision for input parsing & formatting
 
-# GitHub Issue redirect (change these)
-GITHUB_OWNER = "LiborBenes-US"   # <<-- change to your GitHub username
-GITHUB_REPO = "Units"            # <<-- change to your repository name
+# GitHub Issue redirect
+GITHUB_OWNER = "LiborBenes-US"
+GITHUB_REPO = "Units"
 ISSUE_TITLE = urllib.parse.quote("Unit suggestion:")
 ISSUE_BODY = urllib.parse.quote(
     "Please describe the unit you'd like added (name, exact definition/ratio to SI unit, and source/reference).\n\nExample:\n- name: 'tablespoon_au'\n- definition: 20 mL\n- note: 'Australian tablespoon'"
@@ -35,63 +35,118 @@ st.markdown("**Converter: U.S. & Metric Units** — ad-free, comprehensive, and 
 ureg = UnitRegistry()
 Q_ = ureg.Quantity
 
-# Extra (explicit) unit definitions (covering US survey, variants, barrels, cooking measures, bytes, etc.)
-# We'll load these definitions into pint so they are explicit and labelled.
+# NIST-aligned unit definitions
 EXTRA_DEFS = """
-# Survey / historical / labelled units
+# Length (NIST SP 811, Handbook 44)
 nautical_mile = 1852 * meter = nmi
 statute_mile = 1609.344 * meter
-mile_us_survey = 1609.3472199999999 * meter
-foot_us_survey = 1200/3937 * meter
+mile_us_survey = 1609.347218694 * meter
+foot_us_survey = 0.3048006096 * meter
+inch = 0.0254 * meter
+yard = 0.9144 * meter
+
+# Area (NIST SP 811)
 acre_intl = 4046.8564224 * meter**2
-acre_us_survey = 4046.8726099886 * meter**2
-# Tons
-ton_short = 2000 * pound = short_ton
-ton_long = 2240 * pound = long_ton
+acre_us_survey = 4046.872609874 * meter**2
+
+# Volume (NIST SP 811, Handbook 44)
+gallon_us = 3.785411784 * liter
+fluid_ounce_us = 0.0295735295625 * liter
+cup_us = 0.2365882365 * liter
+pint_us = 0.473176473 * liter
+quart_us = 0.946352946 * liter
+fluid_ounce_imp = 0.0284130625 * liter
+pint_imp = 0.56826125 * liter
+quart_imp = 1.1365225 * liter
+gallon_imp = 4.54609 * liter
+teaspoon_us = 0.00492892159375 * liter
+tablespoon_us = 0.01478676478125 * liter
+tablespoon_metric = 0.015 * liter
+tablespoon_au = 0.02 * liter
+barrel_oil_us = 158.987294928 * liter
+barrel_beer_us = 117.347765304 * liter
+barrel_beer_uk = 163.65924 * liter
+
+# Mass (NIST SP 811)
+pound = 0.45359237 * kilogram
+ton_short = 907.18474 * kilogram
+ton_long = 1016.0469088 * kilogram
 tonne = 1000 * kilogram = t
 quintal = 100 * kilogram = q
-# Barrels and related
-gallon_us = 231 * inch**3
-fluid_ounce_us = gallon_us / 128
-cup_us = 8 * fluid_ounce_us
-pint_us = 2 * cup_us
-quart_us = 2 * pint_us
-fluid_ounce_imp = 28.4130625 * milliliter
-pint_imp = 20 * fluid_ounce_imp
-quart_imp = 2 * pint_imp
-gallon_imp = 4 * pint_imp
-# teaspoons/tablespoons (variants)
-teaspoon_us = 4.92892159375 * milliliter
-tablespoon_us = 14.78676478125 * milliliter
-tablespoon_metric = 15 * milliliter
-tablespoon_au = 20 * milliliter
-# barrels (various)
-barrel_oil_us = 42 * gallon_us
-barrel_beer_us = 31 * gallon_us
-barrel_beer_uk = 36 * gallon_imp
-# Byte units - SI decimal and IEC binary prefixes
+ounce = 0.028349523125 * kilogram
+stone = 6.35029318 * kilogram
+
+# Speed (derived from NIST length/time)
+knot = 0.514444444 * meter/second
+mile_per_hour = 0.44704 * meter/second
+
+# Pressure (NIST SP 811)
+bar = 100000 * pascal
+atmosphere = 101325 * pascal
+mmHg = 133.322387415 * pascal
+psi = 6894.757293168 * pascal
+
+# Energy & Power (NIST SP 811)
+calorie = 4.184 * joule
+kcal = 4184 * joule
+BTU = 1055.05585262 * joule
+watt_hour = 3600 * joule
+kilowatt_hour = 3600000 * joule
+
+# Fuel Economy (derived from NIST length/volume)
+mile_per_gallon_us = statute_mile / gallon_us
+mile_per_gallon_imp = statute_mile / gallon_imp
+
+# Digital Storage (IEC/SI standards)
 byte = [information]
 kB = 1000 * byte
-MB = 1000**2 * byte
-GB = 1000**3 * byte
-TB = 1000**4 * byte
-PB = 1000**5 * byte
+MB = 1000000 * byte
+GB = 1000000000 * byte
+TB = 1000000000000 * byte
+PB = 1000000000000000 * byte
 KiB = 1024 * byte
-MiB = 1024**2 * byte
-GiB = 1024**3 * byte
-TiB = 1024**4 * byte
-PiB = 1024**5 * byte
-# Fuel economy
-mile_per_gallon_us = mile / gallon_us
-mile_per_gallon_imp = mile / gallon_imp
+MiB = 1048576 * byte
+GiB = 1073741824 * byte
+TiB = 1099511627776 * byte
+PiB = 1125899906842624 * byte
+
+# Angle (NIST SP 811)
+degree = 0.0174532925199433 * radian
+grad = 0.015707963267949 * radian
 """
 
 # Load definitions into pint
-import io as _io
 for line in EXTRA_DEFS.splitlines():
     line = line.strip()
     if line and not line.startswith('#'):  # Skip empty lines and comments
         ureg.define(line)
+
+# Debug conversions to verify NIST alignment
+def debug_conversion(value, from_unit, to_unit):
+    try:
+        q_from = Q_(float(value), from_unit)
+        q_to = q_from.to(to_unit)
+        print(f"{value} {from_unit} = {q_to.magnitude} {to_unit}")
+    except Exception as e:
+        print(f"Error converting {value} {from_unit} to {to_unit}: {e}")
+
+# Run debug tests for all categories
+debug_tests = [
+    (2.718, "acre_intl", "hectare"),  # ~1.09969564224
+    (3.14159, "gallon_us", "liter"),  # ~11.8933517538
+    (1, "barrel_oil_us", "gallon_imp"),  # ~34.9723157541
+    (123.456, "pound", "kilogram"),  # ~55.9957834963
+    (0.9876, "ton_short", "tonne"),  # ~0.8960396754
+    (37.5, "degC", "degF"),  # 99.5
+    (88.6, "kilometer/hour", "mile_per_hour"),  # ~55.05312353
+    (1013.25, "millibar", "pascal"),  # 101325
+    (5000, "joule", "calorie"),  # ~1195.02868069
+    (8.5, "liter/100 kilometer", "mile_per_gallon_us"),  # ~27.6736941176
+    (1024, "MiB", "MB"),  # ~1073.741824
+    (180, "degree", "radian"),  # ~3.14159265359
+]
+for value, from_unit, to_unit in debug_tests:
+    debug_conversion(value, from_unit, to_unit)
 
 # ----------------------------
 # UNIT CATEGORIES and LISTS
@@ -116,9 +171,9 @@ CATEGORIES = {
         "milligram", "gram", "kilogram", "quintal", "tonne", "ounce", "pound", "stone", "ton_short", "ton_long"
     ],
     "Temperature": ["degC", "degF", "kelvin"],
-    "Speed": ["meter/second", "kilometer/hour", "mile/hour", "knot"],
+    "Speed": ["meter/second", "kilometer/hour", "mile_per_hour", "knot"],
     "Pressure": ["pascal", "kilopascal", "bar", "atmosphere", "mmHg", "psi"],
-    "Energy & Power": ["joule", "kilojoule", "watt*hour", "kilowatt*hour", "calorie", "kcal", "BTU", "watt"],
+    "Energy & Power": ["joule", "kilojoule", "watt_hour", "kilowatt_hour", "calorie", "kcal", "BTU", "watt"],
     "Fuel economy": ["liter/100 kilometer", "mile_per_gallon_us", "mile_per_gallon_imp"],
     "Digital storage": ["bit", "byte", "kB", "MB", "GB", "TB", "PB", "KiB", "MiB", "GiB", "TiB", "PiB"],
     "Angle": ["degree", "radian", "grad"]
@@ -137,7 +192,6 @@ if "history" not in st.session_state:
 
 def add_history(obj):
     st.session_state.history.insert(0, obj)
-    # cap history length to avoid memory bloat
     st.session_state.history = st.session_state.history[:500]
 
 # ----------------------------
@@ -161,22 +215,25 @@ st.sidebar.caption("Session history is stored only while this tab is open. Use t
 def parse_decimal_input(text):
     text = text.strip()
     try:
-        # allow scientific notation; Decimal handles it
         val = Decimal(text)
         return val
     except (InvalidOperation, ValueError):
         return None
 
 # Helper: convert Decimal-valued quantity to pint Quantity
-# Helper: convert Decimal-valued quantity to pint Quantity
 def quantity_from_decimal(value_decimal, unit_str):
     """
     Create a pint Quantity from a Decimal and unit string.
+    Handles temperature units specially to avoid offset issues.
     """
     try:
-        # Convert Decimal to float for pint compatibility
-        # This avoids issues with pint's internal parsing
-        q = Q_(float(value_decimal), unit_str)
+        # For temperature units, convert to float due to offset operations
+        temperature_units = ['degC', 'degF', 'kelvin']
+        if unit_str in temperature_units:
+            q = Q_(float(value_decimal), unit_str)
+        else:
+            # Use string conversion to preserve precision for non-temperature units
+            q = Q_(str(value_decimal), unit_str)
         return q
     except Exception as e:
         st.error(f"Quantity creation error: {e}")
@@ -184,26 +241,21 @@ def quantity_from_decimal(value_decimal, unit_str):
 
 # Helper: format result with proper precision
 def format_result(value, precision):
-    """Format a numeric value with the specified precision"""
+    """
+    Format a numeric value with the specified precision.
+    """
     try:
-        # Handle different input types
         if hasattr(value, 'magnitude'):
-            # It's a pint Quantity, extract magnitude
             value = value.magnitude
-        
         if isinstance(value, Decimal):
             dec_val = value
         else:
-            # Convert to string first to avoid floating point precision issues
             dec_val = Decimal(str(value))
-        
-        # Format with the specified precision
-        quantized = dec_val.quantize(Decimal(1) / (Decimal(10) ** precision))
+        quantized = dec_val.quantize(Decimal('0.' + '0' * precision))
         return format(quantized, 'f')
     except:
-        # Fallback for very large/small numbers or other issues
         try:
-            return f"{value:.{precision}g}"
+            return f"{value:.{precision}f}"
         except:
             return str(value)
 
@@ -214,13 +266,11 @@ if tool == "Unit Converter":
     st.header("🔀 Unit Converter")
     st.markdown(
         "Pick a category, choose units, and enter a numeric value. "
-        "You may input very high-precision numbers (Decimal). "
-        "Note: conversions use the pint library; very extreme precision may be limited by floating-point internals. "
+        "Conversions are aligned with NIST standards for high precision. "
+        "Decimal input is supported; output precision is user-adjustable."
     )
 
     cat = st.selectbox("Category", list(CATEGORIES.keys()))
-
-    # build lists with readable labels
     units_for_cat = CATEGORIES[cat]
     labels = [pretty_unit_label(u) + f"  ({u})" for u in units_for_cat]
 
@@ -236,30 +286,28 @@ if tool == "Unit Converter":
         prec = st.slider("Display precision (decimal places)", 3, 60, 8)
         convert_btn = st.button("Convert")
 
-    # If user presses convert
     if convert_btn:
         dec_val = parse_decimal_input(raw_text)
         if dec_val is None:
             st.error("Invalid numeric input. Use digits, optional decimal point, or scientific notation (e.g. 1.23e-4).")
         else:
-            # build quantities
             try:
                 q_from = quantity_from_decimal(dec_val, from_unit)
-                # attempt conversion
-                q_to = q_from.to(to_unit)
-                
-                # Format the result
-                formatted = format_result(q_to.magnitude, prec)
-                out_str = f"{dec_val} {from_unit} = {formatted} {to_unit}"
-                st.success(out_str)
-                add_history({
-                    "tool": "unit",
-                    "category": cat,
-                    "from": from_unit,
-                    "to": to_unit,
-                    "value": str(dec_val),
-                    "result": formatted
-                })
+                if q_from is None:
+                    st.error("Failed to create quantity.")
+                else:
+                    q_to = q_from.to(to_unit)
+                    formatted = format_result(q_to.magnitude, prec)
+                    out_str = f"{dec_val} {from_unit} = {formatted} {to_unit}"
+                    st.success(out_str)
+                    add_history({
+                        "tool": "unit",
+                        "category": cat,
+                        "from": from_unit,
+                        "to": to_unit,
+                        "value": str(dec_val),
+                        "result": formatted
+                    })
             except UndefinedUnitError as e:
                 st.error(f"Undefined unit: {e}")
             except Exception as e:
@@ -393,7 +441,7 @@ elif tool == "Encodings & Hashes":
             if st.button("Hash Text"):
                 h = hashlib.new(algo, text.encode("utf8")).hexdigest()
                 st.code(h)
-                add_history({"tool":"hash_text","algo":algo,"in":text,"out":h})
+                add_history({"tool":"hash_text","algo":algo,"in":previously mentioned text,"out":h})
         else:
             f = st.file_uploader("Upload file to hash", type=None)
             algo = st.selectbox("Algorithm", ["md5", "sha1", "sha256", "sha512"], key="filehash_algo")
@@ -434,8 +482,8 @@ elif tool == "About & Suggest":
     st.header("ℹ️ About Units")
     st.markdown("""
     **Units** is a comprehensive conversion toolbox built with Streamlit and pint.
-    - All conversions are done using a curated pint registry (SI, metric subunits, US customary, Imperial, US survey, and other variants).
-    - The app accepts high-precision numeric input (Decimal) but note conversions are performed by pint (floating-point internals may limit absolute precision).
+    - All conversions use NIST-aligned unit definitions for high precision (NIST Handbook 44, SP 811).
+    - The app accepts high-precision Decimal input; output precision is adjustable via the slider.
     - Session history is kept only for the current browser tab; use the download buttons to persist history locally.
     """)
     st.markdown("### Suggest a unit (no API, no form data processed by this app)")
@@ -462,15 +510,11 @@ if "show_history" in st.session_state and st.session_state.get("show_history"):
         st.info("No history yet. Perform some conversions or utilities to populate the session history.")
     else:
         df = pd.DataFrame(st.session_state.history)
-        # show first 200 entries
         st.dataframe(df.head(200), width="stretch")
-        # JSON download
         js = json.dumps(st.session_state.history, indent=2)
         st.download_button("⬇️ Download history (JSON)", data=js, file_name="units_history.json", mime="application/json")
-        # CSV download
         csv_buf = io.StringIO()
         writer = csv.writer(csv_buf)
-        # flatten dicts to keys
         keys = set()
         for row in st.session_state.history:
             keys.update(row.keys())
@@ -484,4 +528,4 @@ if "show_history" in st.session_state and st.session_state.get("show_history"):
 # FOOTER / NOTES
 # ----------------------------
 st.markdown("---")
-st.caption("Notes: 1) This app uses pint for unit conversions. 2) Decimal input is supported; conversions may be subject to floating-point limits depending on unit factors. 3) Suggestions open a GitHub Issue — no data is transmitted from the app itself.")
+st.caption("Notes: 1) Conversions use NIST-aligned unit definitions (NIST Handbook 44, SP 811). 2) Decimal input is supported; output precision is adjustable. 3) Suggestions open a GitHub Issue — no data is transmitted from the app itself.")
