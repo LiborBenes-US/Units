@@ -69,11 +69,6 @@ tablespoon_au = 20 * milliliter
 barrel_oil_us = 42 * gallon_us
 barrel_beer_us = 31 * gallon_us
 barrel_beer_uk = 36 * gallon_imp
-# common aliases and shorthand
-meter = metre
-litre = liter
-mL = milliliter
-L = liter
 # Byte units - SI decimal and IEC binary prefixes
 byte = [information]
 kB = 1000 * byte
