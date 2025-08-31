@@ -94,10 +94,8 @@ kilowatt_hour = 3600000 * joule
 # Fuel Economy (derived from NIST length/volume)
 mile_per_gallon_us = statute_mile / gallon_us = mpg_us
 mile_per_gallon_imp = statute_mile / gallon_imp = mpg_imp
-
-# Create a new dimension for fuel consumption (L/100km)
-[fuel_consumption] = [volume] / [length]
-liter_per_100_kilometer = 0.01 * liter / meter = L/100km
+# Define as consumption (volume per distance) - pint will handle the inverse relationship
+liter_per_100_kilometer = (100 * liter) / kilometer = L/100km
 
 # Digital Storage (IEC/SI standards)
 byte = [information]
@@ -153,6 +151,36 @@ debug_tests = [
 ]
 for value, from_unit, to_unit in debug_tests:
     debug_conversion(value, from_unit, to_unit)
+
+# ----------------------------
+# Manual fuel economy conversion functions
+# ----------------------------
+def convert_fuel_economy(value, from_unit, to_unit):
+    """Manual conversion for fuel economy units"""
+    try:
+        value_float = float(value)
+        if from_unit == "liter_per_100_kilometer" and to_unit == "mile_per_gallon_us":
+            # L/100km to mpg: mpg = 235.214583 / (L/100km)
+            return 235.214583 / value_float
+        elif from_unit == "mile_per_gallon_us" and to_unit == "liter_per_100_kilometer":
+            # mpg to L/100km: L/100km = 235.214583 / mpg
+            return 235.214583 / value_float
+        elif from_unit == "liter_per_100_kilometer" and to_unit == "mile_per_gallon_imp":
+            # L/100km to mpg (imp): mpg_imp = 282.4809363 / (L/100km)
+            return 282.4809363 / value_float
+        elif from_unit == "mile_per_gallon_imp" and to_unit == "liter_per_100_kilometer":
+            # mpg (imp) to L/100km: L/100km = 282.4809363 / mpg_imp
+            return 282.4809363 / value_float
+        elif from_unit == "mile_per_gallon_us" and to_unit == "mile_per_gallon_imp":
+            # mpg (US) to mpg (imp): mpg_imp = mpg_us * 1.20095
+            return value_float * 1.20095
+        elif from_unit == "mile_per_gallon_imp" and to_unit == "mile_per_gallon_us":
+            # mpg (imp) to mpg (US): mpg_us = mpg_imp / 1.20095
+            return value_float / 1.20095
+        else:
+            return None
+    except (ValueError, ZeroDivisionError):
+        return None
 
 # ----------------------------
 # UNIT CATEGORIES and LISTS
@@ -301,22 +329,41 @@ if tool == "Unit Converter":
             st.error("Invalid numeric input. Use digits, optional decimal point, or scientific notation (e.g. 1.23e-4).")
         else:
             try:
-                q_from = quantity_from_decimal(dec_val, from_unit)
-                if q_from is None:
-                    st.error("Failed to create quantity.")
+                # Check if this is a fuel economy conversion that needs manual handling
+                fuel_units = ["liter_per_100_kilometer", "mile_per_gallon_us", "mile_per_gallon_imp"]
+                if from_unit in fuel_units and to_unit in fuel_units:
+                    manual_result = convert_fuel_economy(dec_val, from_unit, to_unit)
+                    if manual_result is not None:
+                        formatted = format_result(manual_result, prec)
+                        out_str = f"{dec_val} {from_unit} = {formatted} {to_unit}"
+                        st.success(out_str)
+                        add_history({
+                            "tool": "unit",
+                            "category": cat,
+                            "from": from_unit,
+                            "to": to_unit,
+                            "value": str(dec_val),
+                            "result": formatted
+                        })
+                    else:
+                        st.error("Unsupported fuel economy conversion")
                 else:
-                    q_to = q_from.to(to_unit)
-                    formatted = format_result(q_to.magnitude, prec)
-                    out_str = f"{dec_val} {from_unit} = {formatted} {to_unit}"
-                    st.success(out_str)
-                    add_history({
-                        "tool": "unit",
-                        "category": cat,
-                        "from": from_unit,
-                        "to": to_unit,
-                        "value": str(dec_val),
-                        "result": formatted
-                    })
+                    q_from = quantity_from_decimal(dec_val, from_unit)
+                    if q_from is None:
+                        st.error("Failed to create quantity.")
+                    else:
+                        q_to = q_from.to(to_unit)
+                        formatted = format_result(q_to.magnitude, prec)
+                        out_str = f"{dec_val} {from_unit} = {formatted} {to_unit}"
+                        st.success(out_str)
+                        add_history({
+                            "tool": "unit",
+                            "category": cat,
+                            "from": from_unit,
+                            "to": to_unit,
+                            "value": str(dec_val),
+                            "result": formatted
+                        })
             except UndefinedUnitError as e:
                 st.error(f"Undefined unit: {e}")
             except Exception as e:
