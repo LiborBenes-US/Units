@@ -441,7 +441,7 @@ elif tool == "Encodings & Hashes":
             if st.button("Hash Text"):
                 h = hashlib.new(algo, text.encode("utf8")).hexdigest()
                 st.code(h)
-                add_history({"tool":"hash_text","algo":algo,"in":previously mentioned text,"out":h})
+                add_history({"tool":"hash_text","algo":algo,"in":text,"out":h})
         else:
             f = st.file_uploader("Upload file to hash", type=None)
             algo = st.selectbox("Algorithm", ["md5", "sha1", "sha256", "sha512"], key="filehash_algo")
