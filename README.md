@@ -1,7 +1,7 @@
 # Units — Universal Converter ⚖️
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_blue_white.svg)](https://units1.streamlit.app)
-[![License: MIT](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE.txt)
+[![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](LICENSE.txt)
 [![GitHub Issues](https://img.shields.io/github/issues/LiborBenes-US/Units.svg)](https://github.com/LiborBenes-US/Units/issues)
 
 **Converter: U.S. & Metric Units**
