@@ -168,20 +168,15 @@ def parse_decimal_input(text):
         return None
 
 # Helper: convert Decimal-valued quantity to pint Quantity
+# Helper: convert Decimal-valued quantity to pint Quantity
 def quantity_from_decimal(value_decimal, unit_str):
     """
     Create a pint Quantity from a Decimal and unit string.
-    Preserves Decimal precision where possible.
     """
     try:
-        # For temperature units, we need special handling
-        if unit_str in ["degC", "degF", "kelvin"]:
-            # Create temperature with Decimal magnitude
-            q = Q_(float(value_decimal), unit_str)
-        else:
-            # For other units, try to preserve Decimal precision
-            # Convert to string first to avoid floating point issues
-            q = Q_(str(value_decimal), unit_str)
+        # Convert Decimal to float for pint compatibility
+        # This avoids issues with pint's internal parsing
+        q = Q_(float(value_decimal), unit_str)
         return q
     except Exception as e:
         st.error(f"Quantity creation error: {e}")
@@ -191,15 +186,26 @@ def quantity_from_decimal(value_decimal, unit_str):
 def format_result(value, precision):
     """Format a numeric value with the specified precision"""
     try:
+        # Handle different input types
+        if hasattr(value, 'magnitude'):
+            # It's a pint Quantity, extract magnitude
+            value = value.magnitude
+        
         if isinstance(value, Decimal):
-            return format(value.quantize(Decimal(1) / (Decimal(10) ** precision)), 'f')
+            dec_val = value
         else:
-            # Convert to Decimal for formatting
+            # Convert to string first to avoid floating point precision issues
             dec_val = Decimal(str(value))
-            return format(dec_val.quantize(Decimal(1) / (Decimal(10) ** precision)), 'f')
+        
+        # Format with the specified precision
+        quantized = dec_val.quantize(Decimal(1) / (Decimal(10) ** precision))
+        return format(quantized, 'f')
     except:
-        # Fallback for very large/small numbers
-        return f"{value:.{precision}g}"
+        # Fallback for very large/small numbers or other issues
+        try:
+            return f"{value:.{precision}g}"
+        except:
+            return str(value)
 
 # ----------------------------
 # TOOL: Unit Converter
