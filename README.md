@@ -1,5 +1,9 @@
 # Units — Universal Converter ⚖️
 
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://units1.streamlit.app)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
+[![GitHub Issues](https://img.shields.io/github/issues/LiborBenes-US/Units.svg)](https://github.com/LiborBenes-US/Units/issues)
+
 **Converter: U.S. & Metric Units**
 
 [Units](https://units1.streamlit.app) is a comprehensive, ad-free unit conversion tool built with [Streamlit](https://streamlit.io) and `pint`. Deployed at [units1.streamlit.app](https://units1.streamlit.app).  
